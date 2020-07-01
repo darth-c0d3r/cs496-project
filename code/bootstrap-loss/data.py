@@ -175,5 +175,5 @@ def getBreakhisDataset():
 # print(data["train"][0][0].shape)
 
 from util import *
-dataset = getBreakhisDataset()
-visualize_dataset(dataset, "eval", "breakhis")
+dataset = getDoughnutDataset()
+visualize_dataset(dataset, "eval", "doughnut")
