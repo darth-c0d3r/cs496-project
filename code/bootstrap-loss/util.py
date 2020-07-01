@@ -1,5 +1,8 @@
 import torch
 import torch.nn as nn
+import os
+import random
+import matplotlib.pyplot as plt
 
 def get_device(cuda):
 	"""
@@ -91,6 +94,53 @@ def save_model(model, name):
 	if model is not None:
 		torch.save(model, "models/"+name)
 
+
+def visualize_dataset(dataset, folder, name):
+
+	batch_size = 50
+	num_graphs = 20
+
+	if "data_vis" not in os.listdir():
+		os.mkdir("data_vis")
+
+	if name not in os.listdir("data_vis"):
+		os.mkdir("data_vis/"+name)
+
+	for idx in range(num_graphs):
+
+		# get the data loader
+		dataloader = torch.utils.data.DataLoader(dataset[folder], batch_size=batch_size, shuffle=False)
+
+		idxs = random.sample(range(dataset[folder].num_elems), k=2)
+		print("Using Indices "+str(idxs))
+
+		for X, Y in dataloader:
+
+			H = [[],[]]
+
+			X = X.view(X.shape[0], -1)
+
+			for i in range(len(X)):
+				H[Y[i]].append(torch.tensor([[X[i][idxs[0]], X[i][idxs[1]]]]))
+
+			if len(H[0]) != 0:
+				H[0] = torch.cat(H[0], 0)
+			if len(H[1]) != 0:
+				H[1] = torch.cat(H[1], 0)
+
+			# print(H[0].shape)
+
+			if len(H[0]) != 0:
+				plt.plot(H[0][:,0], H[0][:,1], 'ro')
+			if len(H[1]) != 0:
+				plt.plot(H[1][:,0], H[1][:,1], 'go')
+
+		plt.savefig("data_vis/%s/%d.jpg"%(name, idx))
+		plt.show()
+
+
+
+
 def visualize_embedding(enc, dataset, device, folder, directory, weighted, binary, w_n, thresh, beta):
 	"""
 	To visualize the embeddings of the encoder
@@ -102,7 +152,7 @@ def visualize_embedding(enc, dataset, device, folder, directory, weighted, binar
 	enc.eval()
 
 	# get the data loader
-	dataloader = torch.utils.data.DataLoader(dataset[folder], batch_size=batch_size, shuffle=False)
+	dataloader = torch.utils.data.DataLoader(dataset[folder], batch_size=batch_size, shuffle=True)
 
 	H = []
 	T = []
@@ -195,3 +245,4 @@ def visualize_embedding(enc, dataset, device, folder, directory, weighted, binar
 
 		plt.savefig("plots/%s/%d_(%d_%d).jpg"%(directory,idx+1,idxs[0], idxs[1]))
 		plt.show()
+

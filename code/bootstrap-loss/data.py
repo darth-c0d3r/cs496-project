@@ -24,6 +24,7 @@ class DummyDataset(Dataset):
 		self.size = size
 		self.shape = shape
 		self.num_classes = num_classes
+		self.num_elems = shape[0]*shape[1]*shape[2]
 
 	def __len__(self):
 		return self.num_classes*self.size
@@ -49,6 +50,64 @@ def getDummyDataset():
 
 	return {"train":DummyDataset(size[0], shape, num_classes), "eval":DummyDataset(size[1], shape, num_classes)}
 
+#---------------------- DOUGHNUT-DATASET ----------------------#
+
+class DoughnutDataset(Dataset):
+
+	def __init__(self, size, shape, num_classes=2, noise=0.):
+		"""
+		size is the number of samples per class
+		shape is the shape of each sample
+
+		size =:= 100
+		shape =:= [3,256,256]
+		num_classes =:= 4
+
+		"""
+		self.size = size
+		self.shape = shape
+		self.num_classes = num_classes
+		self.num_elems = shape[0]*shape[1]*shape[2]
+
+		self.len = self.num_classes*self.size
+		self.noise = [0]*self.len
+
+		p = int(self.len*noise/100)
+		print("Noise level : %04f [%d/%d]"%(noise, p, self.len))
+
+		choices = random.sample(range(self.len), k=p)
+		for idx in choices:
+			self.noise[idx] = 1
+
+	def __len__(self):
+		return self.len
+
+	def __getitem__(self, idx):
+
+		target = idx % self.num_classes
+		# normalize dataset externally; don't worry about it now
+
+		data = torch.randn([2])*0.2
+		data = data + (target*(data/(torch.sqrt(torch.sum(data*data)))))
+		data = data.repeat([int(self.num_elems/2)])
+		data = data.view(self.shape)
+
+		data = data + torch.randn(data.shape)*0.1
+
+		return data, torch.tensor((target+self.noise[idx])%2)
+
+def getDoughnutDataset():
+
+	size = [500, 100]
+	shape = [3,128,128]
+	num_classes = 2
+
+	# size = [5,1]
+	# shape = [3]
+	# num_classes = 2
+
+	return {"train":DoughnutDataset(size[0], shape, num_classes), "eval":DoughnutDataset(size[1], shape, num_classes, 25.)}
+
 #---------------------- BREAKHIS-DATASET ----------------------#
 
 class BreakhisDataset(Dataset):
@@ -58,6 +117,7 @@ class BreakhisDataset(Dataset):
 		super(BreakhisDataset, self).__init__()
 
 		self.shape = [3,460,700]
+		self.num_elems = self.shape[0]*self.shape[1]*self.shape[2]
 		self.num_classes = 2
 
 		self.base = "../data_new"
@@ -113,3 +173,7 @@ def getBreakhisDataset():
 
 # data = getBreakhisDataset()
 # print(data["train"][0][0].shape)
+
+from util import *
+dataset = getBreakhisDataset()
+visualize_dataset(dataset, "eval", "breakhis")

@@ -225,7 +225,7 @@ def train(enc, dec, disc, clsfr, dataset, device):
 	# -------------------------------------------------- #
 
 	# VISUALIZE
-	visualize_embedding(enc, dataset, device, "eval", "mdl_13", weighted, False, w_n, thresh, beta)
+	visualize_embedding(enc, dataset, device, "eval", "mdl_13", weighted, False, w_n, None, beta)
 
 	# -------------------------------------------------- #
 
